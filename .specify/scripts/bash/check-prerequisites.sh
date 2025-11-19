@@ -10,6 +10,8 @@ set -e
 
 JSON_MODE=false
 PATHS_ONLY=false
+REQUIRE_TASKS=false
+INCLUDE_TASKS=false
 
 for arg in "$@"; do
     case "$arg" in
@@ -19,8 +21,14 @@ for arg in "$@"; do
         --paths-only)
             PATHS_ONLY=true
             ;;
+        --require-tasks)
+            REQUIRE_TASKS=true
+            ;;
+        --include-tasks)
+            INCLUDE_TASKS=true
+            ;;
         --help|-h)
-            echo "Usage: $0 [--json] [--paths-only]"
+            echo "Usage: $0 [--json] [--paths-only] [--require-tasks] [--include-tasks]"
             exit 0
             ;;
         *)
@@ -42,6 +50,18 @@ if [[ ! -d "$FEATURE_DIR" ]]; then
     exit 1
 fi
 
+if [[ ! -f "$IMPL_PLAN" ]]; then
+    echo "ERROR: plan.md not found in $FEATURE_DIR" >&2
+    echo "Run /speckit.plan first to create the implementation plan." >&2
+    exit 1
+fi
+
+if $REQUIRE_TASKS && [[ ! -f "$TASKS" ]]; then
+    echo "ERROR: tasks.md not found in $FEATURE_DIR" >&2
+    echo "Run /speckit.tasks first to generate the task list." >&2
+    exit 1
+fi
+
 AVAILABLE_DOCS=()
 [[ -f "$FEATURE_SPEC" ]] && AVAILABLE_DOCS+=("spec.md")
 [[ -f "$IMPL_PLAN" ]] && AVAILABLE_DOCS+=("plan.md")
@@ -51,6 +71,9 @@ if [[ -d "$CONTRACTS_DIR" ]] && [[ -n "$(ls -A "$CONTRACTS_DIR" 2>/dev/null)" ]]
     AVAILABLE_DOCS+=("contracts/")
 fi
 [[ -f "$QUICKSTART" ]] && AVAILABLE_DOCS+=("quickstart.md")
+if $INCLUDE_TASKS && [[ -f "$TASKS" ]]; then
+    AVAILABLE_DOCS+=("tasks.md")
+fi
 
 if $PATHS_ONLY && ! $JSON_MODE; then
     echo "REPO_ROOT: $REPO_ROOT"
@@ -75,4 +98,3 @@ else
         echo "  - $d"
     done
 fi
-

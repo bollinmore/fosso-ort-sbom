@@ -40,6 +40,11 @@ both source code and package manager manifest files.
    **When** the scan completes,
    **Then** the user sees a clear warning describing which manifests were not
    processed and how this may affect the completeness of the SBOM.
+4. **Given** Fossology completes its portion of a scan but OSS Review Toolkit
+   encounters an error,
+   **When** the scan completes,
+   **Then** the user is informed that third-party dependency coverage is
+   partial and is directed to retry once the ORT issue is resolved.
 
 ### Edge Cases
 - Projects that contain no recognizable package manager manifests but do have
@@ -48,7 +53,7 @@ both source code and package manager manifest files.
   example, one for backend and one for frontend).
 - Very large projects where scanning may take noticeable time or require
   progress feedback, including scans that may run for up to about one hour
-  under normal operating conditions.
+  under normal operating conditions, with visible job states.
 - Projects where manifest files declare dependencies that cannot be resolved
   or mapped to SBOM components.
 - Users attempting to scan projects that are too large or exceed configured
@@ -73,6 +78,10 @@ both source code and package manager manifest files.
   and all third-party components discovered from package manager manifests,
   so that the SBOM provides a holistic view of the project's software
   composition.
+- **FR-005a**: The system MUST orchestrate Fossology and OSS Review Toolkit in
+  a defined order so that Fossology handles upload-based scanning and license
+  analysis while ORT processes the same project inputs to enumerate resolved
+  third-party dependencies referenced in manifests.
 - **FR-006**: The system MUST present a summary of scan results to the user,
   including counts of components discovered and any warnings about incomplete
   or partial analysis.
@@ -101,21 +110,37 @@ both source code and package manager manifest files.
   login mechanism provided by the underlying scanning web interface before
   they can initiate scans or view and download SBOM artifacts, and MUST not
   permit anonymous access.
+- **FR-015**: The system MUST surface integration warnings when Fossology and
+  ORT produce divergent or partial results, explaining which tool encountered
+  issues and how the SBOM output was affected.
 
 ### Success Criteria
-- At least 90% of typical projects within the intended size range can be
-  successfully scanned and produce SBOMs in both SPDX and CycloneDX formats
-  without manual intervention.
+- At least 90% of typical projects (defined as uploads up to 5 GB or 200k
+  files) can be successfully scanned and produce SBOMs in both SPDX and
+  CycloneDX formats without manual intervention, completing within five
+  minutes of active processing time.
 - For projects with known and supported package manager manifests, at least
   95% of declared third-party dependencies are represented as components in
   the generated SBOMs.
-- For typical projects within the intended size range, a full scan (from user
-  initiation to SBOM generation) completes within a time window that keeps
-  users engaged (for example, within a few minutes) under normal operating
-  conditions.
+- Integration between Fossology and ORT is considered successful when both
+  systems produce component inventories whose counts differ by no more than
+  2% for overlapping scopes, or else the user is given explicit warnings
+  describing any discrepancies.
 - Users report that they understand the status of scans and how to download
   and interpret SBOM outputs, as measured by a high rate of successful
   completion of the primary user task in usability reviews.
+
+### Non-Functional Requirements
+- Performance: Long-running scans (up to one hour) MUST expose job state and
+  progress updates at least every two minutes; typical scans MUST finish
+  within five minutes of processing time as noted earlier.
+- Resource Usage: The orchestration layer MUST document CPU, memory, and disk
+  expectations for Fossology and ORT containers and provide guardrails to
+  prevent exhausted resources from impacting other internal workloads.
+- Security: SBOM artifacts and scan logs MUST reside in organization-managed
+  storage with access governed by the same authentication mechanism used by
+  Fossology, and sensitive metadata MUST not be exposed outside the internal
+  network.
 
 ### Assumptions
 - The primary users are developers, security engineers, or compliance
@@ -126,6 +151,14 @@ both source code and package manager manifest files.
 - The initial release focuses on a prioritized set of package manager
   manifest formats based on common usage; additional ecosystems can be added
   in future iterations.
+- Official Fossology and OSS Review Toolkit Docker images are available in
+  the target environment, and the orchestrator can run them with the required
+  permissions.
+- The orchestration layer can rely on the existing Fossology authentication
+  flow and internal network connectivity; no external multi-tenant exposure
+  is required.
+- SBOM artifacts are stored in organization-controlled storage with retention
+  policies configured by administrators outside the scope of this feature.
 
 ### Dependencies
 - Access to the project source code and manifest files is available from the
@@ -135,6 +168,9 @@ both source code and package manager manifest files.
 - Any downstream tooling or processes that will consume the generated SBOMs
   (for example, compliance reporting or security analysis) can already handle
   SPDX and CycloneDX formats.
+- SBOM storage endpoints and retention settings are configured before scans
+  begin, and the orchestration layer captures artifact identifiers and
+  locations for auditability.
 
 ---
 
@@ -153,6 +189,9 @@ both source code and package manager manifest files.
 - **SBOM Artifact**: A machine-readable document that describes the
   components and relationships in a project, generated in a specific format
   such as SPDX or CycloneDX.
+- **Integration Warning**: Metadata produced when Fossology or ORT cannot
+  complete part of the analysis, including cause, affected manifests or
+  components, and required operator follow-up.
 
 ---
 
