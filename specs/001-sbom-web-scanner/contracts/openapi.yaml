@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: Web SBOM Scanner Orchestration API
+  version: 0.1.0
+paths:
+  /projects/{projectId}/scans:
+    post:
+      summary: Start a new scan for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Scan accepted
+  /scans/{scanId}:
+    get:
+      summary: Get scan status and summary
+      parameters:
+        - name: scanId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scan status
+  /scans/{scanId}/sboms:
+    get:
+      summary: List SBOM artifacts for a scan
+      parameters:
+        - name: scanId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SBOM list
+
