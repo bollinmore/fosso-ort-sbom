@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+node_modules/
+dist/
+build/
+tests/
+specs/
+.specify/
+.env
+.env.*
+*.log
+projects/*
+!projects/.gitkeep

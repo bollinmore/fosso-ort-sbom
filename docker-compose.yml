@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  fossology:
+    image: fossology/fossology
+    container_name: fossology
+    restart: unless-stopped
+    environment:
+      # Update credentials to match your internal deployment policies
+      - FOSSOLOGY_DB_HOST=fossology-db
+      - FOSSOLOGY_DB_NAME=fossology
+      - FOSSOLOGY_DB_USER=fossy
+      - FOSSOLOGY_DB_PASS=changeme
+    ports:
+      - "8081:80"
+    depends_on:
+      - fossology-db
+    volumes:
+      - fossology-data:/var/lib/fossology
+
+  fossology-db:
+    image: postgres:15
+    container_name: fossology-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=fossy
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=fossology
+    volumes:
+      - fossology-db-data:/var/lib/postgresql/data
+
+  ort:
+    image: ossreviewtoolkit/ort
+    container_name: ort
+    restart: unless-stopped
+    environment:
+      # Point ORT to any shared storage or Fossology endpoints as needed
+      - ORT_DATA_DIR=/var/lib/ort
+    volumes:
+      - ort-data:/var/lib/ort
+      - ./projects:/projects:ro
+    command: ["sleep", "infinity"]
+
+volumes:
+  fossology-data:
+  fossology-db-data:
+  ort-data:
