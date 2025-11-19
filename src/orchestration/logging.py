@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict
 
 LOG_LEVEL = os.environ.get("SBOM_LOG_LEVEL", "INFO").upper()
@@ -22,7 +22,12 @@ logger.setLevel(LOG_LEVEL)
 
 def log_job_event(job_id: str, status: str, message: str, extra: Dict[str, Any] | None = None) -> None:
     """Emit a structured log entry for job lifecycle events."""
-    payload = {"job_id": job_id, "status": status, "message": message, "ts": datetime.utcnow().isoformat() + "Z"}
+    payload = {
+        "job_id": job_id,
+        "status": status,
+        "message": message,
+        "ts": datetime.now(UTC).isoformat(),
+    }
     if extra:
         payload.update(extra)
     logger.info("%s", payload)

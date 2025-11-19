@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -54,8 +54,8 @@ class IntegrationJob:
     scan_id: str
     state: JobState = JobState.QUEUED
     message: str = ""
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass

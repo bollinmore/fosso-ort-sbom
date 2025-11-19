@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Dict, Optional
 from uuid import uuid4
 
@@ -24,7 +24,7 @@ class JobRegistry:
         job = self._require_job(job_id)
         job.state = state
         job.message = message
-        job.updated_at = datetime.utcnow()
+        job.updated_at = datetime.now(UTC)
         return job
 
     def get(self, job_id: str) -> Optional[IntegrationJob]:
