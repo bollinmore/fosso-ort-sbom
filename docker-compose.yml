@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   fossology:
     image: fossology/fossology
@@ -10,7 +8,7 @@ services:
       - FOSSOLOGY_DB_HOST=fossology-db
       - FOSSOLOGY_DB_NAME=fossology
       - FOSSOLOGY_DB_USER=fossy
-      - FOSSOLOGY_DB_PASS=changeme
+      - FOSSOLOGY_DB_PASS=fossy
     ports:
       - "8081:80"
     depends_on:
@@ -24,13 +22,13 @@ services:
     restart: unless-stopped
     environment:
       - POSTGRES_USER=fossy
-      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_PASSWORD=fossy
       - POSTGRES_DB=fossology
     volumes:
       - fossology-db-data:/var/lib/postgresql/data
 
   ort:
-    image: ossreviewtoolkit/ort
+    image: ghcr.io/oss-review-toolkit/ort:latest
     container_name: ort
     restart: unless-stopped
     environment:
@@ -39,7 +37,8 @@ services:
     volumes:
       - ort-data:/var/lib/ort
       - ./projects:/projects:ro
-    command: ["sleep", "infinity"]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sleep infinity"]
 
 volumes:
   fossology-data:
